@@ -1,0 +1,37 @@
+일반적으로 사용되는 몇가지 디자인 패턴
+
+1. 여러 메시지 스트리밍
+단일 파일이나 스트림에 여러 메시지를 쓰려는 경우 하나의 메시지가 끝나고 다음 메시지가 시작되는 위치를 추적하는 것은 사용자에게 달려있다. 프로토콜 버퍼 와이어. 형식은 자체적으로 구분되지 않으므로 프로토콜 버퍼 구분 분석기는 메시지가 끝나는 위치를 스스로 결정할 수 없다.
+이 문제를 해결하는 가장 쉬운 방법 -> 메시지 자체를 작성하기 전에 각 메시지의 크기를 작성하는 것
+- 메시지를 다시 읽을 때 크기를 읽은 다음에 별도의 버퍼로 바이트를 읽은 다음 해당 버퍼에서 구문 분석!!
+- 바이트를 별도로 복사하지 않으려면 CodedInputStream을 바이트 수를 제한 할 수 있는 클래스 확인
+
+
+2. 대규모 데이터 세트
+프로토콜 버퍼는 큰 메시지를 처리하도록 설계되지 않음 -> 일반적으로 각각 1MB보다 큰 메시지를 처리하는 경우 대체 전략을 고려해야 할 때일 수 있다.
+-> 프로토콜 버퍼는 대규모 데이터 세트 내의 개별 메시지를 처리하는 데 적합
+- 즉 전체 세트를 처리할 수 는 없지만 프로토콜 버퍼를 사용하여 각 조각을 인코딩하면 문제가 크게 단순화 -> 구조 세트가 아닌 바이트 문자열 세트 처리
+
+
+
+3. 자체 설명 메시지
+프로토콜 버퍼에는 자체 유형에 대한 설명이 포함 X -> .proto 유형을 정의하는 해당 파일 없이 원시 메시지만 주어지면 유용한 데이터를 추출하기 어려움
+
+그러나 .proto 파일의 내용 자체는 프로토콜 버퍼를 사용하여 나타낼 수 있다.
+옵션을 사용하여 .proto파일 집합을 나타내느 protoc 파일을 출력 -> 자체 설명 프로토콜 메시짖지를 정의할 수 있다.
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
+
+message SelfDescribingMessage {
+  // Set of FileDescriptorProtos which describe the type and its dependencies.
+  google.protobuf.FileDescriptorSet descriptor_set = 1;
+
+  // The message and its type, encoded as an Any message.
+  google.protobuf.Any message = 2;
+}
+
+
+selfDescribingMessage 처럼 라이브러리에 포함되지 않은 이유는 구글에서 사용한 적이 없기 때문 ㅇㅅㅇㅇ;
